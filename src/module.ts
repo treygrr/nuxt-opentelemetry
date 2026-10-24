@@ -3,8 +3,8 @@ import { readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
 import {
+    addNitroPlugin,
     addPlugin,
-    addServerPlugin,
     addServerTemplate,
     addTypeTemplate,
     createResolver,
@@ -53,7 +53,7 @@ export default defineNuxtModule<ModuleOptions>({
     meta: {
         name: '@treygrr/nuxt-opentelemetry',
         configKey: 'opentelemetry',
-        compatibility: { nuxt: '^4.0.0' }
+        compatibility: { nuxt: '^4.6.0' }
     },
     defaults: {
         enabled: true,
@@ -66,7 +66,8 @@ export default defineNuxtModule<ModuleOptions>({
 
         // Names page-render spans after the Vue route, and request spans after the Nitro route.
         addPlugin({ src: resolve('./runtime/app/plugins/route.server'), mode: 'server' });
-        addServerPlugin(resolve('./runtime/server/plugins/opentelemetry'));
+        // Written against nitropack v2 and h3 v1, which Nitro v3 hosts also run through their compatibility layer.
+        addNitroPlugin({ nitro2: resolve('./runtime/server/plugins/opentelemetry') });
 
         addServerTemplate({
             filename: OPTIONS_ID,

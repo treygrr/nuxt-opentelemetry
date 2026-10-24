@@ -32,7 +32,7 @@ node .output/server/index.mjs
 
 Requirements:
 
-- **Nuxt 4** with the `node-server` Nitro preset (the default for `nuxt build`).
+- **Nuxt 4.6+** with the `node-server` Nitro preset (the default for `nuxt build`).
 - **Node `^22.22.3` or `>=24.11.1`**, which can run synchronous module hooks. On older versions the SDK still starts,
   but ESM packages aren't instrumented and a warning is logged.
 
@@ -87,7 +87,9 @@ These are read by the OpenTelemetry SDK, so the [standard documentation][env] ap
 - **Code Nitro bundles can't be patched.** Auto-instrumentations work on packages Nitro keeps external (in
   `.output/server/node_modules`) and on Node built-ins. To trace a bundled package, add it to
   `nitro.externals.external`.
-- **Nitro v3 isn't supported yet.** It has its own tracing channels (`h3.request`), which a later version can use.
+- **Built for Nitro 2.** The Nitro plugin is registered as the `nitro2` variant (`addNitroPlugin({ nitro2 })`), which
+  Nuxt also runs on Nitro v3 hosts through its compatibility layer, but tracing hasn't been tested on Nitro v3. A
+  `nitro3` variant could use h3 v2's tracing channels (`h3.request`) instead.
 
 ## How it works
 
