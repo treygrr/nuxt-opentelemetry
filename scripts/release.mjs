@@ -25,6 +25,7 @@ writeFileSync('package.json', `${JSON.stringify(pkg, null, 4)}\n`);
 
 run('git add package.json');
 run(`git commit -m "chore: release v${version}"`);
-run(`git tag v${version}`);
+// Annotated, so `git push --follow-tags` pushes it (it skips lightweight tags).
+run(`git tag -a v${version} -m "v${version}"`);
 
 console.log(`\nTagged v${version}. Push to publish:\n\n  git push --follow-tags\n`);
