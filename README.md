@@ -1,15 +1,36 @@
-# @treygrr/nuxt-opentelemetry
+<p align="center">
+  <img src=".github/assets/nuxt-otel.png" alt="Nuxt + OpenTelemetry" width="600">
+</p>
 
-OpenTelemetry tracing for Nuxt servers. It starts the OpenTelemetry Node SDK before Nitro loads, so each request gets an
-HTTP server span, and names that span after the Nuxt page or Nitro route that handled it (`GET /items/:id`).
-Everything else is configured with the standard `OTEL_*` environment variables.
+<h1 align="center">@treygrr/nuxt-opentelemetry</h1>
 
-- Built on the OpenTelemetry JS 3.0 SDK (`@opentelemetry/api` 1.10, `sdk-node` 0.300).
-- Loads the Node auto-instrumentations, so outgoing `fetch` calls, database clients and so on get child spans.
-- Uses Node's synchronous module hooks (`module.registerHooks`) through `import-in-the-middle` 3.
-- Flushes queued spans when Nitro shuts down (SIGTERM), so a pod being replaced doesn't lose its last traces.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@treygrr/nuxt-opentelemetry"><img src="https://img.shields.io/npm/v/@treygrr/nuxt-opentelemetry?color=00DC82&label=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@treygrr/nuxt-opentelemetry"><img src="https://img.shields.io/npm/dm/@treygrr/nuxt-opentelemetry?color=4f62ad" alt="npm downloads"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/@treygrr/nuxt-opentelemetry?color=blue" alt="license"></a>
+  <a href="https://nuxt.com"><img src="https://img.shields.io/badge/Nuxt-4.6+-00DC82?logo=nuxt.js&logoColor=white" alt="Nuxt 4.6+"></a>
+</p>
 
-## Setup
+<p align="center">
+  🔭 OpenTelemetry tracing for your Nuxt server, with spans named after your routes. ✨
+</p>
+
+---
+
+Add the module, set a couple of `OTEL_*` env vars, and you get traces. 🎉
+
+It starts the OpenTelemetry Node SDK before Nitro loads, so each request gets an HTTP server span, and names that span
+after the Nuxt page or Nitro route that handled it (`GET /items/:id`). Everything else is configured with the standard
+`OTEL_*` environment variables.
+
+## ✨ Features
+
+- 🧱 **Built on the OpenTelemetry JS 3.0 SDK** (`@opentelemetry/api` 1.10, `sdk-node` 0.300).
+- 🔌 **Loads the Node auto-instrumentations**, so outgoing `fetch` calls, database clients and so on get child spans.
+- 🪝 **Uses Node's synchronous module hooks** (`module.registerHooks`) through `import-in-the-middle` 3.
+- 🧹 **Flushes queued spans when Nitro shuts down** (SIGTERM), so a pod being replaced doesn't lose its last traces.
+
+## 🚀 Setup
 
 ```bash
 pnpm add @treygrr/nuxt-opentelemetry
@@ -30,13 +51,13 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
 node .output/server/index.mjs
 ```
 
-Requirements:
+### 📋 Requirements
 
 - **Nuxt 4.6+** with the `node-server` Nitro preset (the default for `nuxt build`).
 - **Node `^22.22.3` or `>=24.11.1`**, which can run synchronous module hooks. On older versions the SDK still starts,
   but ESM packages aren't instrumented and a warning is logged.
 
-## Spans
+## 🏷️ Spans
 
 | Request | Span name | `http.route` |
 | --- | --- | --- |
@@ -49,7 +70,7 @@ Errors with a 5xx status are recorded on the span as an `exception` event. The r
 
 No spans are created for Nuxt's build assets (`/_nuxt/`), the files in `public/`, or the paths in `ignore`.
 
-## Options
+## ⚙️ Options
 
 ```ts
 export default defineNuxtConfig({
@@ -62,7 +83,7 @@ export default defineNuxtConfig({
 });
 ```
 
-## Environment variables
+## 🌱 Environment variables
 
 These are read by the OpenTelemetry SDK, so the [standard documentation][env] applies. The common ones:
 
@@ -80,7 +101,7 @@ These are read by the OpenTelemetry SDK, so the [standard documentation][env] ap
 
 [env]: https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/
 
-## Limitations
+## ⚠️ Limitations
 
 - **Only the built `node-server` output is traced.** `nuxt dev`, prerendering and tests run other presets and don't
   start the SDK.
@@ -91,7 +112,7 @@ These are read by the OpenTelemetry SDK, so the [standard documentation][env] ap
   Nuxt also runs on Nitro v3 hosts through its compatibility layer, but tracing hasn't been tested on Nitro v3. A
   `nitro3` variant could use h3 v2's tracing channels (`h3.request`) instead.
 
-## How it works
+## 🧠 How it works
 
 - At build time the module replaces Nitro's entry with one that first imports `runtime/instrumentation`, then the
   server. That file registers `import-in-the-middle`'s synchronous hooks and starts `NodeSDK` with the auto-
@@ -107,7 +128,7 @@ These are read by the OpenTelemetry SDK, so the [standard documentation][env] ap
       patched on its next `require`, after Nitro created its server, and the first request would get no span. The SDK
       file requires `http` and `https` once right after starting.
 
-## Development
+## 🛠️ Development
 
 ```bash
 pnpm install
@@ -119,12 +140,12 @@ pnpm fmt
 
 `pnpm release <version>` bumps, commits and tags a version; pushing the tag publishes it from CI.
 
-## Credits
+## 💚 Credits
 
 The idea of naming request spans after the Nuxt route comes from [`@scayle/nuxt-opentelemetry`][scayle] (MIT).
 
 [scayle]: https://github.com/scayle/nuxt-opentelemetry
 
-## License
+## 📄 License
 
-MIT
+[MIT](./LICENSE). Happy tracing! 🔭
