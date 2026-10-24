@@ -1,6 +1,6 @@
 {
     "name": "@treygrr/nuxt-opentelemetry",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "OpenTelemetry tracing for Nuxt servers: starts the Node SDK before Nitro and names each request span after its Nuxt route.",
     "keywords": [
         "nuxt",
