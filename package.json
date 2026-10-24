@@ -43,7 +43,7 @@
         "fmt": "prettier --check src test playground scripts prettier.config.mjs",
         "fmt:fix": "prettier --write src test playground scripts prettier.config.mjs",
         "test": "pnpm build && vitest run",
-        "typecheck": "nuxt-module-build prepare && nuxt prepare playground && vue-tsc --noEmit",
+        "typecheck": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playground && vue-tsc --noEmit",
         "release": "node scripts/release.mjs",
         "prepack": "pnpm build"
     },

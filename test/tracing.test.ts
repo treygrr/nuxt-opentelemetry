@@ -20,9 +20,10 @@ describe('the built server', () => {
     let output: string;
     const port = 3931;
     const base = `http://localhost:${port}`;
-    const asset = readdirSync(join(playgroundDir, '.output/public/_nuxt')).find((file) => file.endsWith('.js'));
+    let asset: string | undefined;
 
     beforeAll(async () => {
+        asset = readdirSync(join(playgroundDir, '.output/public/_nuxt')).find((file) => file.endsWith('.js'));
         collector = await startCollector();
         const server = await startServer(port, {
             OTEL_SERVICE_NAME: 'playground',
