@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+*.log
+.DS_Store
+.nuxt
+.output
+.data
+
+# Secrets
+.env
+.env.*
+!.env.example

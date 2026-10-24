@@ -1,0 +1,12 @@
+packages:
+  - playground
+
+# Only install versions published at least a day ago.
+minimumReleaseAge: 1440
+
+# pnpm 11+ fails the install unless each install script is explicitly allowed or denied.
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  protobufjs: false
+  unrs-resolver: false

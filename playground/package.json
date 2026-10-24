@@ -1,0 +1,9 @@
+{
+    "name": "nuxt-opentelemetry-playground",
+    "private": true,
+    "type": "module",
+    "dependencies": {
+        "@treygrr/nuxt-opentelemetry": "workspace:*",
+        "nuxt": "4.6.2"
+    }
+}
