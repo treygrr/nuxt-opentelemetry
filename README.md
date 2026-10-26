@@ -29,6 +29,8 @@ after the Nuxt page or Nitro route that handled it (`GET /items/:id`). Everythin
 - 🔌 **Loads the Node auto-instrumentations**, so outgoing `fetch` calls, database clients and so on get child spans.
 - 🪝 **Uses Node's synchronous module hooks** (`module.registerHooks`) through `import-in-the-middle` 3.
 - 🧹 **Flushes queued spans when Nitro shuts down** (SIGTERM), so a pod being replaced doesn't lose its last traces.
+- 💓 **Serves a health check route** at `/_health` for load balancers and Kubernetes probes, left out of traces so
+  probes polling every few seconds don't bury real requests.
 
 ## 🚀 Setup
 
@@ -68,7 +70,23 @@ node .output/server/index.mjs
 Errors with a 5xx status are recorded on the span as an `exception` event. The route is also added to the
 `http.server.request.duration` metric.
 
-No spans are created for Nuxt's build assets (`/_nuxt/`), the files in `public/`, or the paths in `ignore`.
+No spans are created for Nuxt's build assets (`/_nuxt/`), the files in `public/`, the health check route, or the
+paths in `ignore`.
+
+## 💓 Health check
+
+`GET /_health` answers `ok` (uncached) while the server is up. Point your probes at it:
+
+```yaml
+# A Kubernetes container
+readinessProbe:
+    httpGet:
+        path: /_health
+        port: http
+```
+
+Probes poll every few seconds, so its requests aren't traced: on `/`, they'd bury every real request in your
+tracing backend. Move it, trace it, or turn it off with `healthCheck` below. It's served even with `enabled: false`.
 
 ## ⚙️ Options
 
@@ -78,7 +96,13 @@ export default defineNuxtConfig({
         // Turn the module off at build time. Use OTEL_SDK_DISABLED=true to turn it off at runtime.
         enabled: true,
         // Requests that get no span: strings match path prefixes, regular expressions are tested against the path.
-        ignore: ['/__nuxt', '/_ipx/', '/_fonts/', /^\/healthz$/]
+        ignore: ['/__nuxt', '/_ipx/', '/_fonts/'],
+        healthCheck: {
+            // Where the health check is served, or false for none.
+            route: '/_health',
+            // Trace its requests too.
+            trace: false
+        }
     }
 });
 ```

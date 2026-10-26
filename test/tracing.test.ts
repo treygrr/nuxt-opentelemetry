@@ -21,6 +21,7 @@ describe('the built server', () => {
     const port = 3931;
     const base = `http://localhost:${port}`;
     let asset: string | undefined;
+    let health: { status: number; body: string; cacheControl: string | null } | undefined;
 
     beforeAll(async () => {
         asset = readdirSync(join(playgroundDir, '.output/public/_nuxt')).find((file) => file.endsWith('.js'));
@@ -45,6 +46,12 @@ describe('the built server', () => {
         ]) {
             await fetch(`${base}${path}`);
         }
+        const response = await fetch(`${base}/_health`, { headers: { 'user-agent': 'kube-probe/1.36' } });
+        health = {
+            status: response.status,
+            body: await response.text(),
+            cacheControl: response.headers.get('cache-control')
+        };
         // Stopping flushes spans still queued in the batch processor.
         await server.stop();
         output = server.output();
@@ -96,6 +103,11 @@ describe('the built server', () => {
     it('ignores build assets and public files', () => {
         expect(serverSpan('/robots.txt')).toBeUndefined();
         expect(serverSpan(`/_nuxt/${asset}`)).toBeUndefined();
+    });
+
+    it('serves a health check route, left out of traces', () => {
+        expect(health).toEqual({ status: 200, body: 'ok', cacheControl: 'no-store' });
+        expect(serverSpan('/_health')).toBeUndefined();
     });
 
     it('starts without warnings from the SDK', () => {

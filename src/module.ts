@@ -5,6 +5,7 @@ import { join, relative, sep } from 'node:path';
 import {
     addNitroPlugin,
     addPlugin,
+    addServerHandler,
     addServerTemplate,
     addTypeTemplate,
     createResolver,
@@ -26,6 +27,22 @@ export type ModuleOptions = {
      * @default ['/__nuxt', '/_ipx/', '/_fonts/']
      */
     ignore: (string | RegExp)[];
+    /**
+     * A route for load balancers' and Kubernetes' probes, answering `GET` with `ok`. Probes poll every few seconds,
+     * so it's left out of traces, where it would bury every other request.
+     */
+    healthCheck: {
+        /**
+         * Where it's served, or `false` for none. Served even with `enabled: false`, so probes keep working.
+         * @default '/_health'
+         */
+        route: string | false;
+        /**
+         * Trace its requests too.
+         * @default false
+         */
+        trace: boolean;
+    };
 };
 
 /** Presets whose entry the module can run the SDK before. */
@@ -44,6 +61,9 @@ const listFiles = async (dir: string): Promise<string[]> => {
         .map((entry) => `/${relative(dir, join(entry.parentPath, entry.name)).split(sep).join('/')}`);
 };
 
+/** Matches exactly `path`, unlike a string matcher, which matches every path starting with it */
+const exactly = (path: string) => new RegExp(`^${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+
 const serializeMatcher = (matcher: string | RegExp) =>
     matcher instanceof RegExp
         ? `new RegExp(${JSON.stringify(matcher.source)}, ${JSON.stringify(matcher.flags)})`
@@ -57,12 +77,22 @@ export default defineNuxtModule<ModuleOptions>({
     },
     defaults: {
         enabled: true,
-        ignore: ['/__nuxt', '/_ipx/', '/_fonts/']
+        ignore: ['/__nuxt', '/_ipx/', '/_fonts/'],
+        healthCheck: { route: '/_health', trace: false }
     },
     setup(options, nuxt) {
-        if (!options.enabled) return;
-
         const { resolve } = createResolver(import.meta.url);
+
+        const healthRoute = options.healthCheck.route;
+        if (healthRoute) {
+            addServerHandler({
+                route: healthRoute,
+                method: 'get',
+                handler: resolve('./runtime/server/routes/health')
+            });
+        }
+
+        if (!options.enabled) return;
 
         // Names page-render spans after the Vue route, and request spans after the Nitro route.
         addPlugin({ src: resolve('./runtime/app/plugins/route.server'), mode: 'server' });
@@ -74,8 +104,10 @@ export default defineNuxtModule<ModuleOptions>({
             getContents: async () => {
                 const publicFiles = await listFiles(nuxt.options.dir.public);
                 const prefixes = [nuxt.options.app.buildAssetsDir];
+                const health = healthRoute && !options.healthCheck.trace ? [exactly(healthRoute)] : [];
+                const ignore = [...prefixes, ...health, ...options.ignore];
                 return [
-                    `export const ignore = [${[...prefixes, ...options.ignore].map(serializeMatcher).join(', ')}];`,
+                    `export const ignore = [${ignore.map(serializeMatcher).join(', ')}];`,
                     `export const publicFiles = new Set(${JSON.stringify(publicFiles)});`
                 ].join('\n');
             }
